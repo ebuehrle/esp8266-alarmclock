@@ -1,0 +1,6 @@
+[submodule "WiFiManager"]
+	path = WiFiManager
+	url = https://github.com/ebuehrle/WiFiManager.git
+[submodule "micropython-st7735-esp8266"]
+	path = micropython-st7735-esp8266
+	url = https://github.com/mo-pyy/micropython-st7735-esp8266.git
