@@ -1,4 +1,4 @@
-PORT=/dev/tty.wchusbserial1a160
+PORT=/dev/tty.usbserial-1410
 
 .PHONY: transfer
 transfer: base.transfered main.transfered periph.transfered views.transfered tft.transfered st7735.transfered font.transfered wifimgr.transfered

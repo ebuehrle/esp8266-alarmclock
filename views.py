@@ -1,11 +1,13 @@
 import periph
 import font
 import base
+import time
 
 def merge_styles(s1, s2):
     s = s1.copy()
     s.update(s2)
     return s
+
 
 class DisplayDimmer:
 
@@ -23,9 +25,11 @@ class DisplayDimmer:
         elif self.current_brightness > self.target_brightness:
             self.current_brightness -= self.adapt_speed
         
+        self.current_brightness = min(1, max(0, self.current_brightness))
         self.pwm_pin.duty(int(self.current_brightness * 1023))
 
-        self.child_view.update()
+        if self.isDisplayOn():
+            self.child_view.update()
 
     def displayOn(self):
         self.target_brightness = 1
@@ -38,9 +42,30 @@ class DisplayDimmer:
     
     def onInput(self, pin, action):
         if self.isDisplayOn():
-            self.child_view.onInput(pin)
+            self.child_view.onInput(pin, action)
         
         self.displayOn()
+
+
+class InactivityDisplayDimmer(DisplayDimmer):
+
+    def __init__(self, child_view, adapt_speed, pwm_pin, inactivity_timeout_ms=5000):
+        super().__init__(child_view, adapt_speed, pwm_pin)
+        self.inactivity_timeout = inactivity_timeout_ms
+        self.last_activity = time.ticks_ms()
+    
+    def update(self):
+        super().update()
+        if time.ticks_diff(time.ticks_ms(), self.last_activity) >= self.inactivity_timeout:
+            self.displayOff()
+    
+    def displayOn(self):
+        super().displayOn()
+        self.last_activity = time.ticks_ms()
+
+    def onInput(self, pin, action):
+        super().onInput(pin, action)
+        self.last_activity = time.ticks_ms()
 
 
 class App:
@@ -64,8 +89,8 @@ class App:
         elif isinstance(self.child_view, SetAlarmView):
             self.child_view.onInput(pin, action)
     
-    def onAlarm(self, alarm_id, alarm_datetime):
-        print("Alarm", alarm_id, alarm_datetime)
+    def onAlarm(self, alarm):
+        print(alarm, "just went off")
         periph.audio.play()
         self.child_view = ClockView(self.style)
     
@@ -118,7 +143,7 @@ class SetAlarmView:
 
         self.alarm_minute_spinner = Spinner(
             merge_styles(self.style, { 'left': 10 + self.alarm_hour_spinner.width() + self.alarm_colon.width(), 'top': 50, 'font-size': 4 }),
-            [("%02d" % v, v) for v in range(0, 60, 10)],
+            [("%02d" % v, v) for v in range(0, 60, 5)],
             initial_value=self.config['alarm-minute'],
             onChange=lambda e: self.config.update({ 'alarm-minute': e.selectedValue() })
         )

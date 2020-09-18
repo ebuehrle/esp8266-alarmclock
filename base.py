@@ -133,7 +133,7 @@ class Alarm:
         return time.mktime(local_datetime) >= time.mktime(self.datetime)
     
     def ring(self):
-        self.handler(self.ident, self.datetime)
+        self.handler(self)
     
     def __repr__(self):
         return "Alarm({}, {}, repeat={})".format(self.ident, self.datetime, self.repeating)
@@ -143,6 +143,7 @@ class AlarmManager:
 
     def __init__(self):
         self.alarms = []
+        self.handlers = []
     
     def add(self, alarm):
         self.cancel(alarm.ident)
@@ -163,13 +164,25 @@ class AlarmManager:
                 updated_alarms.append(alarm)
                 continue
             
-            alarm.ring()
+            self.onAlarm(alarm)
 
             if alarm.repeating:
                 alarm.updateDatetime()
                 updated_alarms.append(alarm)
             
         self.alarms = updated_alarms
+    
+    def subscribeHandler(self, handler):
+        self.handlers.append(handler)
+    
+    def removeHandler(self, handler):
+        if handler in self.handlers:
+            self.handlers.remove(handler)
+    
+    def onAlarm(self, alarm):
+        alarm.ring()
+        for handler in self.handlers:
+            handler(alarm)
 
 
 class Audio:

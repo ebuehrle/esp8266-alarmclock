@@ -1,4 +1,4 @@
-from views import DisplayDimmer, App
+from views import InactivityDisplayDimmer, App
 import machine
 import network
 import periph
@@ -12,8 +12,8 @@ app_config = {
 }
 
 style = {
-    'background-color': (81, 45, 168),
-    'color': (255, 64, 129),
+    'background-color': (0, 0, 0), #(81, 45, 168),
+    'color': (255, 255, 255), #(255, 64, 129),
 }
 
 def get_connection():
@@ -38,10 +38,11 @@ def main():
     periph.TFT.init()
 
     app = App(style, app_config)
-    dimmer = DisplayDimmer(app, 0.005, periph.display_led_pwm)
+    dimmer = InactivityDisplayDimmer(app, 0.005, periph.display_led_pwm, inactivity_timeout_ms=6000)
     dimmer.displayOn()
 
-    periph.buttons_watcher.subscribeHandler(lambda pin, action: app.onInput(pin, action))
+    periph.buttons_watcher.subscribeHandler(lambda pin, action: dimmer.onInput(pin, action))
+    periph.alarm_manager.subscribeHandler(lambda alarm: dimmer.displayOn())
 
     while True:
         periph.buttons_watcher.update()
