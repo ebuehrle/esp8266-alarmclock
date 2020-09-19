@@ -71,7 +71,7 @@ class ICTime:
 
     last_update_time = -999999
 
-    def __init__(self, update_interval_s=60, retry_interval_s=5):
+    def __init__(self, update_interval_s=60*60, retry_interval_s=15):
         self.update_interval_s = update_interval_s
         self.retry_interval_s = retry_interval_s
     
